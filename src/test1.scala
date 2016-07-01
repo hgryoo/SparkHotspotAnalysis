@@ -188,26 +188,7 @@ object test1 {
        }
    
      
-     //println(my_map.size)
-     // var sort_map = ListMap(my_map.toSeq.sortWith(_._2 < _._2):_*)
-//      var hotspot = 0;
-//      breakable{
-//      for((x,y,z) <- my_map.keys){
-//        if (my_map(x,y,z) == 1) {
-//          //println(z + ", " + y + " , " + z );
-//          hotspot += 1;
-//        
-//        }
-//        
-//        //hotspot += 1;
-//        
-//        val dou_x = (x / (1/degree));
-//        val dou_y = y / (1/degree);
-//       // println(dou_x + ", " + dou_y + " , " + z + " : " + my_map(x,y,z));
-//      }
-//      
-//      println(hotspot);
-      
+
     }
     catch {
       case ex: Exception => println(ex)
