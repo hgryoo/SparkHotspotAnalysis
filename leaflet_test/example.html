@@ -1,0 +1,61 @@
+﻿
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Leaflet Quick Start Guide Example</title>
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+</head>
+<body>
+    <div id="mapid" style="width: 1800px; height: 900px"></div>
+
+    <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <script>
+
+        var mymap = L.map('mapid').setView([40.75, -73.99], 13);
+
+		L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpandmbXliNDBjZWd2M2x6bDk3c2ZtOTkifQ._QA7i5Mpkd_m30IGElHziw', {
+			maxZoom: 18,
+			attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+				'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+				'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+			id: 'mapbox.streets'
+		}).addTo(mymap);
+
+		var fileName = "E:\\aaa\\output.txt";
+		var fileObject = new ActiveXObject("Scripting.FileSystemObject");
+
+		if (!fileObject.FileExists(fileName)) {
+		    alert('만들어진 파일이 없습니다. 파일을 만드신 후 다시 이용하세요');
+		}
+		else {
+		    alert('성공1');
+		    var fOpen = fileObject.openTextFile(fileName, 1);
+		    var getLine = fOpen.Readline();
+		    alert('성공2')
+		    for (var i = 0; i < 1000; i++) {
+
+		        getLine = fOpen.Readline();
+			getLine = getLine.replace("(","");
+			getLine = getLine.replace("(","");
+			getLine = getLine.replace(")","");
+			getLine = getLine.replace(")","");
+		        var tokenizeLine = getLine.split(',');
+		        L.circle([tokenizeLine[1]/1000 + 0.0005, tokenizeLine[0]/1000 + 0.0005], tokenizeLine[2]/100, {
+		            color: 'red'
+		        }).addTo(mymap);
+		        if (i % 100 == 0) {
+		            alert(i);
+		        }
+
+		    }
+		    fOpen.close();
+		}
+
+
+    </script>
+</body>
+</html>
