@@ -36,20 +36,23 @@
 		    var fOpen = fileObject.openTextFile(fileName, 1);
 		    var getLine = fOpen.Readline();
 		    alert('성공2')
-		    for (var i = 0; i < 1000; i++) {
+		    for (var i = 0; i < 1000;) {
 
 		        getLine = fOpen.Readline();
-			getLine = getLine.replace("(","");
-			getLine = getLine.replace("(","");
-			getLine = getLine.replace(")","");
-			getLine = getLine.replace(")","");
-		        var tokenizeLine = getLine.split(',');
-		        L.circle([tokenizeLine[1]/1000 + 0.0005, tokenizeLine[0]/1000 + 0.0005], tokenizeLine[2]/100, {
-		            color: 'red'
-		        }).addTo(mymap);
-		        if (i % 100 == 0) {
-		            alert(i);
-		        }
+			    getLine = getLine.replace("(","");
+			    getLine = getLine.replace("(","");
+			    getLine = getLine.replace(")","");
+			    getLine = getLine.replace(")","");
+			    var tokenizeLine = getLine.split(',');
+			    if (tokenizeLine[2] > 100) {
+			        L.circle([tokenizeLine[1] / 1000 + 0.0005, tokenizeLine[0] / 1000 + 0.0005], tokenizeLine[2] / 100, {
+			            color: 'red'
+			        }).addTo(mymap);
+			        i++;
+			        if (i % 100 == 0) {
+			            alert(i);
+			        }
+			    }
 
 		    }
 		    fOpen.close();
