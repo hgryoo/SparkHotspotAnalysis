@@ -6,10 +6,13 @@ import scala.math._
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.HashPartitioner
 import scala.collection.mutable._
+import java.io._
 
 object test5 {
-  
-  def main(args: Array[String]) = {
+  def main(args: Array[String])  {
+
+
+
     val degree= args(0).toDouble
     val time_step = args(1).toInt
     
@@ -21,14 +24,14 @@ object test5 {
     
     val sc = new SparkContext(conf);
     
-    val input = sc.textFile("file:///usr/local/sparkhotspot/yellow_tripdata_2015-01.csv");
+    val input = sc.textFile("file:///media/sf_sparkhotspotanalysis/30000sample.csv");
     
-    val data = sc.parallelize(input.take(10000)).map(line => line.split(",").map(elem => elem.trim))
+    val data = sc.parallelize(input.take(30000)).map(line => line.split(",").map(elem => elem.trim))
     
     //val data = input.map(line => line.split(",").map(elem => elem.trim))
 
     
-    val result2 = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0").filter(line => line(6) != 0)
+    val result2 = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0").filter(line => line(6) != "0")
     
     val result3 = result2.map( line => ( line(5), line(6), line(1) ) )
     
@@ -36,7 +39,7 @@ object test5 {
     
     val result4 = result3.map( line => ( ( (line._1.toDouble/degree).toInt ,
         (line._2.toDouble/degree).toInt,
-        ( line._3.split(' ')(0).split('-')(2).toInt) / time_step ), 1) )
+       ( ( line._3.split(' ')(0).split('-')(2).toInt) -1 ) / time_step ), 1) )
         
     
     val result4_p = result4.partitionBy(new HashPartitioner(100)).persist()
@@ -59,7 +62,13 @@ object test5 {
     val pow_sum_mean = pow_sum.value.toDouble / rdd_size.toDouble;
     
     val S =  scala.math.sqrt(abs(pow_sum_mean - mean * mean));
-
+    
+	println("S : " + S);
+	println("mean : " + mean);
+	println("pow_sum : " + pow_sum);
+	println("pow_sum_mean : " + pow_sum_mean);
+	println("rdd_size : " + rdd_size);
+    println("real num :" + result3.count() );
     val weight_map = sc.accumulableCollection(scala.collection.mutable.HashMap[(Int , Int , Int), (Double,Double,Double)]());
      
     val broad_map = sc.broadcast(result5.collectAsMap());
@@ -114,22 +123,20 @@ object test5 {
       
         ((line._1._1,line._1._2,line._1._3),g_value);
     }
-    
-   
-  
-   
-     
-    
-    
-    
 
     println("g_rdd")
-  //  g_rdd.top(50).foreach(println)
-  //  val hotspot = sc.parallelize(g_rdd.top())
+	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
+	sort_g.take(50).foreach( println(_) );
     println("ver1.0 _ done!!!!!")
-    
-    
-  //  hotspot.saveAsTextFile("file:///usr/local/sparkhotspot/test3/result.txt");
     //val g_map = 
+	val writer = new PrintWriter(new File("/home/cocos/result.txt"))
+
+	sort_g.take(50).foreach{
+			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +
+			(line._1._3) + " : " + (line._2))
+			writer.write("\n")
+	}
+	writer.close();
+
   }
 }
