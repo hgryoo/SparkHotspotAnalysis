@@ -19,3 +19,9 @@ This project uses SBT for a build system. To build the library run following com
 ```
 sbt run
 ```
+
+##ResultTest
+
+```
+resultComp.exe "baseFileName" "comparedFileName"
+```
