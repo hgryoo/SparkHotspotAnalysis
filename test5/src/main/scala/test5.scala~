@@ -7,13 +7,12 @@ import org.apache.spark.storage.StorageLevel
 import org.apache.spark.HashPartitioner
 import scala.collection.mutable._
 import java.io._
-import java.lang.System._
 
 object test5 {
   def main(args: Array[String])  {
 
 
-    val time_start = java.lang.System.currentTimeMillis();
+
     val degree= args(0).toDouble
     val time_step = args(1).toInt
     val max = args(2).toInt
@@ -25,7 +24,7 @@ object test5 {
     
     val sc = new SparkContext(conf);
     
-    val input = sc.textFile("file:///media/cocos/Sub Disk/Grad/yellow_tripdata_2015-01.csv");
+    val input = sc.textFile("file:///media/root/Sub Disk/30000sample.csv");
     
     val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
     
@@ -50,7 +49,6 @@ object test5 {
      
     val rdd_size = result5.count();
     
-    val time_make_5 = java.lang.System.currentTimeMillis();
     
     val mean = (result3.count()-1).toDouble /rdd_size.toDouble; // 
    
@@ -76,6 +74,8 @@ object test5 {
     val broad_map = sc.broadcast(result5.collectAsMap());
     
      val find_weight = (line : ((Int,Int,Int),Int) ) => {
+      if (line._1._1 == -73991 && line._1._2 == 40749)
+	      println(line._1._1 + " , " + line._1._2 + " ," + line._1._3 + " weight : ")
       var sum_weight_value = 0.0; //weight x value
       var sum_weight = 0.0;// 
       var sum_pow_weight = 0.0 ; // 
@@ -100,6 +100,8 @@ object test5 {
             var sort_list = dis.sortWith(_>_);
             
             var weight = 1.0 / pow(2,sort_list(0));
+            if (line._1._1 == -73991 && line._1._2 == 40749)
+	    	println(target._1._1 + ", " + target._1._2 + ", " + target._1._3 + " : " + weight )
             sum_weight_value += weight * target._2;
             sum_weight += weight;
             sum_pow_weight += weight * weight;
@@ -125,8 +127,6 @@ object test5 {
         ((line._1._1,line._1._2,line._1._3),g_value);
     }
 
-    val time_make_gmap = java.lang.System.currentTimeMillis();
-
     println("g_rdd")
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
@@ -139,25 +139,14 @@ object test5 {
 	 };
 	}
    	println("ver1.0 _ done!!!!!")
-
-
-    val time_finish = java.lang.System.currentTimeMillis();
     //val g_map = 
-	val writer = new PrintWriter(new File("result_"+args(2)+".txt"))
+	val writer = new PrintWriter(new File("/home/cocos/result.txt"))
 
 	sort_g.take(50).foreach{
 			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +
 			(line._1._3) + " : " + (line._2))
 			writer.write("\n")
 	}
-
-    val time = time_finish - time_start;
-    val time1 = time_make_5 - time_start;
-    val time2 = time_make_gmap - time_start;
-    println("make result5 " + time1 );
-    println ("make gmap " + time2 );
-    println("total : " + time);
-    writer.write(time.toString);
 	writer.close();
 
   }

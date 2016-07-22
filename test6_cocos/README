@@ -1,0 +1,6 @@
+###In spark folder
+./bin/spark-submit --master local [test6_cocos.jar] [degree] [time_step] [max] [heuristic]
+
+output
+In SPARK_HOME
+result_max_heuristic.txt

@@ -1,4 +1,4 @@
-import util.control.Breaks._
+
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -9,7 +9,7 @@ import scala.collection.mutable._
 import java.io._
 import java.lang.System._
 
-object test5 {
+object test6_cocos {
   def main(args: Array[String])  {
 
 
@@ -17,10 +17,11 @@ object test5 {
     val degree= args(0).toDouble
     val time_step = args(1).toInt
     val max = args(2).toInt
+    val heuristic = args(3).toInt
    // System.setProperty("hadoop.home.dir", "HADOOP_HOME");
     
     val conf = new SparkConf().
-    setAppName("test5")
+    setAppName("test6_cocos")
     .setMaster("local");
     
     val sc = new SparkContext(conf);
@@ -46,11 +47,10 @@ object test5 {
     
     val result5 = result4.reduceByKey( (x,y) => x + y)
     
-    result5.persist(StorageLevel.DISK_ONLY)
+    result5.persist(StorageLevel.MEMORY_AND_DISK)
      
     val rdd_size = result5.count();
     
-    val time_make_5 = java.lang.System.currentTimeMillis();
     
     val mean = (result3.count()-1).toDouble /rdd_size.toDouble; // 
    
@@ -75,12 +75,15 @@ object test5 {
      
     val broad_map = sc.broadcast(result5.collectAsMap());
     
-     val find_weight = (line : ((Int,Int,Int),Int) ) => {
+	val sort_result5= result5.collect.toSeq.sortWith(_._2 > _._2)
+
+    val find_weight = (line : ((Int,Int,Int),Int) ) => {
+
       var sum_weight_value = 0.0; //weight x value
       var sum_weight = 0.0;// 
       var sum_pow_weight = 0.0 ; // 
       broad_map.value.foreach{ target =>
-        var dis = List[Int]();
+            var dis = List[Int]();
             if (line._1._1-target._1._1 >0)
               dis = line._1._1-target._1._1 :: dis;
             else
@@ -99,7 +102,7 @@ object test5 {
             
             var sort_list = dis.sortWith(_>_);
             
-            var weight = 1.0 / pow(2,sort_list(0));
+         	var weight = 1.0 / pow(2,sort_list(0));
             sum_weight_value += weight * target._2;
             sum_weight += weight;
             sum_pow_weight += weight * weight;
@@ -108,7 +111,7 @@ object test5 {
     }
      
     
-    val g_rdd = result5.map { line =>
+    val g_rdd = sc.parallelize(sort_result5.take(heuristic)).map { line =>
      
       val res = find_weight(line)
      // val res = (0.1,0.1,0.1)
@@ -123,41 +126,26 @@ object test5 {
       val g_value = molecule / denominator;
       
         ((line._1._1,line._1._2,line._1._3),g_value);
-    }
+    	}
 
-    val time_make_gmap = java.lang.System.currentTimeMillis();
-
-    println("g_rdd")
+    	println("g_rdd")
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
-	var hotspot =0;
-	breakable{
-	sort_g.foreach{	line =>
-		hotspot += 1;
-	 	println(line);
-	 	if (hotspot == 50 )  break;
-	 };
-	}
+	
+	sort_g.take(50).foreach(println(_))
    	println("ver1.0 _ done!!!!!")
-
-
     val time_finish = java.lang.System.currentTimeMillis();
+    val time = time_finish - time_start;
     //val g_map = 
-	val writer = new PrintWriter(new File("result_"+args(2)+".txt"))
+	val writer = new PrintWriter(new File("result_" + args(2)+"_"+args(3)+".txt"))
 
 	sort_g.take(50).foreach{
 			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +
 			(line._1._3) + " : " + (line._2))
 			writer.write("\n")
 	}
-
-    val time = time_finish - time_start;
-    val time1 = time_make_5 - time_start;
-    val time2 = time_make_gmap - time_start;
-    println("make result5 " + time1 );
-    println ("make gmap " + time2 );
-    println("total : " + time);
     writer.write(time.toString);
+    println(time);
 	writer.close();
 
   }
