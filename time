@@ -1,0 +1,6 @@
+- g_rdd sort 할 때(100000 기준) : 40000 ~ 45000 ms
+- 안 할 때 : 6000 ms
+
+##origin v0.1
+
+input에 파일 읽어오기 -> data에 max만큼 rdd생성 -> filter로 result2 생성-> 5,6,2 항목만으로 result3 생성 -> index와 value 더해서 pair rdd로 result4 생성 -> reduceByKey로 result5생성 -> 평균, 합 계산 -> weight 계산 -> g_value를 가진 rdd생성 -> g_rdd sorting -> 50개 뽑아서 출력

@@ -1,4 +1,4 @@
-
+import util.control.Breaks._
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
@@ -8,7 +8,6 @@ import org.apache.spark.HashPartitioner
 import scala.collection.mutable._
 import java.io._
 import java.lang.System._
-import scala.collection.immutable._
 
 object origin {
   def main(args: Array[String])  {
@@ -17,7 +16,7 @@ object origin {
     val time_start = java.lang.System.currentTimeMillis();
     val degree= args(0).toDouble
     val time_step = args(1).toInt
-    val max = args(2).toInt
+   // val max = args(2).toInt
    // System.setProperty("hadoop.home.dir", "HADOOP_HOME");
     
     val conf = new SparkConf().
@@ -28,9 +27,9 @@ object origin {
     
     val input = sc.textFile("file:///media/cocos/Sub Disk/Grad/yellow_tripdata_2015-01.csv");
     
-    val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
+    //val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
     
-    //val data = input.map(line => line.split(",").map(elem => elem.trim))
+    val data = input.map(line => line.split(",").map(elem => elem.trim))
 
     
     val result2 = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0").filter(line => line(6) != "0")
@@ -51,6 +50,8 @@ object origin {
      
     val rdd_size = result5.count();
     
+    val time_make_5 = java.lang.System.currentTimeMillis();
+    
     val mean = (result3.count()-1).toDouble /rdd_size.toDouble; // 
    
     val pow_sum = sc.accumulator(0);
@@ -70,7 +71,8 @@ object origin {
 	println("pow_sum_mean : " + pow_sum_mean);
 	println("rdd_size : " + rdd_size);
     println("real num :" + result3.count() );
-
+    val weight_map = sc.accumulableCollection(scala.collection.mutable.HashMap[(Int , Int , Int), (Double,Double,Double)]());
+     
     val broad_map = sc.broadcast(result5.collectAsMap());
     
      val find_weight = (line : ((Int,Int,Int),Int) ) => {
@@ -111,6 +113,7 @@ object origin {
       val res = find_weight(line)
      // val res = (0.1,0.1,0.1)
     
+     // weight_map += ((line._1._1,line._1._2,line._1._3) -> (res._1,res._2,res._3))
       val sum_weight_value = res._1
       val sum_weight =   res._2
       val sum_pow_weight =  res._3
@@ -125,26 +128,16 @@ object origin {
     val time_make_gmap = java.lang.System.currentTimeMillis();
 
     println("g_rdd")
-    
-	val g_map = g_rdd.collectAsMap();
-	var tree = new TreeMap[Double,( Int, Int, Int)];
+	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
-	g_map.foreach{ line=>
-		tree += (line._2 -> line._1);
-        if (tree.size > 50){
-          tree-=tree.firstKey;	
-		}
-	
+	var hotspot =0;
+	breakable{
+	sort_g.foreach{	line =>
+		hotspot += 1;
+	 	println(line);
+	 	if (hotspot == 50 )  break;
+	 };
 	}
-	
-
-	tree.foreach{	line =>
-
-	 	print(line._2);
-	 	println(line._1);
-	 	
-	};
-
    	println("ver1.0 _ done!!!!!")
 
 
@@ -152,13 +145,14 @@ object origin {
     //val g_map = 
 	val writer = new PrintWriter(new File("result_"+args(2)+".txt"))
 
-	tree.foreach{
-			line => writer.write((line._2._1) + ", " + (line._2._2) + ", " +
-			(line._2._3) + " : " + (line._1))
+	sort_g.take(50).foreach{
+			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +
+			(line._1._3) + " : " + (line._2))
 			writer.write("\n")
 	}
 
     val time = time_finish - time_start;
+
     println("total : " + time);
     writer.write(time.toString);
 	writer.close();

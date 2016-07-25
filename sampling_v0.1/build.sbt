@@ -12,7 +12,7 @@ libraryDependencies ++= Seq(
 
 assemblySettings
 
-jarName in assembly := "sampling"
+jarName in assembly := "sampling.jar"
 
 assemblyOption in assembly :=
 (assemblyOption in assembly).value.copy(includeScala = false)
