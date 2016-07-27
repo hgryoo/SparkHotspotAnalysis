@@ -16,8 +16,8 @@ object sampling {
     val time_start = java.lang.System.currentTimeMillis();
     val degree= args(0).toDouble
     val time_step = args(1).toInt
-    //val max = args(2).toInt
-    val heuristic = args(2).toInt
+    val max = args(2).toInt
+    val heuristic = args(3).toInt
    // System.setProperty("hadoop.home.dir", "HADOOP_HOME");
     
     val conf = new SparkConf().
@@ -28,9 +28,9 @@ object sampling {
     
     val input = sc.textFile("file:///media/cocos/Sub Disk/Grad/yellow_tripdata_2015-01.csv");
     
-    //val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
+    val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
     
-    val data = input.map(line => line.split(",").map(elem => elem.trim))
+    //val data = input.map(line => line.split(",").map(elem => elem.trim))
 
     
     val result2 = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0").filter(line => line(6) != "0")
