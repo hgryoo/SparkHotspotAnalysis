@@ -52,7 +52,8 @@ object origin {
     
     val mean = (result3.count()-1).toDouble /rdd_size.toDouble; // 
    
-    val pow_sum = sc.accumulator(0);
+    val pow_sum = sc.accumulator[Long](0);
+
 	result5.foreach(line => 
 		{
 			pow_sum += line._2 * line._2
@@ -127,8 +128,6 @@ object origin {
         ((line._1._1,line._1._2,line._1._3),g_value);
     }
 
-    val time_make_gmap = java.lang.System.currentTimeMillis();
-
 	val g_mean = gvalue_count.value / rdd_size
 	
     println("g_rdd")
@@ -143,7 +142,7 @@ object origin {
 	
     val time_finish = java.lang.System.currentTimeMillis();
     //val g_map = 
-	val writer = new PrintWriter(new File("result_"+args(2)+".txt"))
+	val writer = new PrintWriter(new File("result_"+args(0)+"_"+args(1)+"_all.txt"))
 
 	sort_g.take(50).foreach{
 			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +

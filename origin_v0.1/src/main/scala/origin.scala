@@ -21,7 +21,7 @@ object origin {
     
     val conf = new SparkConf().
     setAppName("origin")
-    .setMaster("local");
+    .setMaster("local[*]");
     
     val sc = new SparkContext(conf);
     
@@ -30,31 +30,23 @@ object origin {
     val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
     
     //val data = input.map(line => line.split(",").map(elem => elem.trim))
-
     
-    val result2 = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0").filter(line => line(6) != "0")
-    
-    val result3 = result2.map( line => ( line(5), line(6), line(1) ) )
+    val result3 = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0").filter(line => line(6) != "0").map( line => ( line(5), line(6), line(1) ) )
     
    
     
-    val result4 = result3.map( line => ( ( (line._1.toDouble/degree).toInt ,
+    val result5 = result3.map( line => ( ( (line._1.toDouble/degree).toInt ,
         (line._2.toDouble/degree).toInt,
-       ( ( line._3.split(' ')(0).split('-')(2).toInt) -1 ) / time_step ), 1) )
-        
+       ( ( line._3.split(' ')(0).split('-')(2).toInt) -1 ) / time_step ), 1) ).reduceByKey( (x,y) => x + y)
     
-    
-    val result5 = result4.reduceByKey( (x,y) => x + y)
-    
-    result5.persist(StorageLevel.DISK_ONLY)
+    result5.persist(StorageLevel.MEMORY_AND_DISK)
      
     val rdd_size = result5.count();
-    
-    val time_make_5 = java.lang.System.currentTimeMillis();
-    
+ 
     val mean = (result3.count()-1).toDouble /rdd_size.toDouble; // 
    
-    val pow_sum = sc.accumulator(0);
+    val pow_sum = sc.accumulator[Long](0);
+
     result5.foreach(line => {
       pow_sum += line._2 * line._2
     }
@@ -71,8 +63,7 @@ object origin {
 	println("pow_sum_mean : " + pow_sum_mean);
 	println("rdd_size : " + rdd_size);
     println("real num :" + result3.count() );
-    val weight_map = sc.accumulableCollection(scala.collection.mutable.HashMap[(Int , Int , Int), (Double,Double,Double)]());
-     
+    
     val broad_map = sc.broadcast(result5.collectAsMap());
     
      val find_weight = (line : ((Int,Int,Int),Int) ) => {
@@ -125,21 +116,13 @@ object origin {
         ((line._1._1,line._1._2,line._1._3),g_value);
     }
 
-    val time_make_gmap = java.lang.System.currentTimeMillis();
-
     println("g_rdd")
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
-	var hotspot =0;
-	breakable{
-	sort_g.foreach{	line =>
-		hotspot += 1;
-	 	println(line);
-	 	if (hotspot == 50 )  break;
-	 };
+	sort_g.take(50).foreach{	line =>
+		
+	 	println(line); 
 	}
-   	println("ver1.0 _ done!!!!!")
-
 
     val time_finish = java.lang.System.currentTimeMillis();
     //val g_map = 
