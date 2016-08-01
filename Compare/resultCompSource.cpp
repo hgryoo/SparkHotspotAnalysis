@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 	for (int i = 0; i < HOTSPOTNUM; i++) {
 		getline(heuristic, buf);
 		for (vector<string>::iterator it = tmpStr.begin(); it != tmpStr.end(); it++) {
-			/*
+			
 			size_t bColon = it->find_first_of(":");
 			size_t cColon = buf.find_first_of(":");
 
@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
 				score++;
 				break;
 			}
-			*/
+			
 			if (buf.compare(*it) == 0) {
 				score++;
 				break;
