@@ -1,0 +1,7 @@
+[degree][time_step][neighbor_value][input_path][result_path]
+
+###큐브의 neighbor만큼만을 보고 weight를 계산
+###pick_up 뿐만아니라 drop_off 지점도 계산
+
+###persist는 result5만? (아마존에서는 모름)
+
