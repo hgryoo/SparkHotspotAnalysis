@@ -27,21 +27,21 @@ object origin {
     val conf = new SparkConf().
     setAppName("origin")
     .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-.set("spark.kryo.registrationRequired","true")
-.registerKryoClasses(Array(origin.getClass,classOf[scala.collection.mutable.WrappedArray$ofRef]))
-    
+	.set("spark.kryo.registrationRequired","true")
+	.registerKryoClasses(Array(
+	classOf[Array[String]],
+	origin.getClass,
+	classOf[scala.collection.mutable.WrappedArray$ofRef]
+	))
     val sc = new SparkContext(conf);
     
     val input = sc.textFile(args(2))
-    
-    //val data = sc.parallelize(input.take(max)).map(line => line.split(",").map(elem => elem.trim))
     
     val data = input.map(line => line.split(",").map(elem => elem.trim))
 
    
     val result_filter = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0")
 		.filter(line => line(6) != "0")
-		//.persist(StorageLevel.MEMORY_ONLY)
 
 	val result_pick = result_filter
 		.map(line => (line(5),line(6),line(1) ) )
@@ -49,8 +49,6 @@ object origin {
 	val result_drop = result_filter
 		.map(line => (line(9),line(10),line(2) ) )
 	
-	//result_filter.unpersist();
-
     val result3 = result_pick.union(result_drop)
 
 	val real_num = result3.count();
@@ -61,10 +59,9 @@ object origin {
         (line._2.toDouble/degree).toInt,
         ( ( line._3.split(' ')(0).split('-')(2).toInt) -1 ) / time_step ), 1) )
 	.reduceByKey( (x,y) => x + y)
-    
+    .persist(StorageLevel.MEMORY_ONLY)
    
     
-    result5.persist(StorageLevel.MEMORY_ONLY)
      
     val rdd_size = result5.count();
     
@@ -152,10 +149,9 @@ object origin {
     println("g_rdd")
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 >_._2)
 	
-	var hotspot =0;
-	
+
 	sort_g.take(50).foreach{	line =>
-		hotspot += 1;
+
 	 	println(line); 
 	}
 	
@@ -175,5 +171,6 @@ object origin {
     writer.write(time.toString);
 	writer.close();
 
+	readChar
   }
 }
