@@ -16,7 +16,7 @@ object neighbor{
 	if (para == 1)
 	{ (0) }
 	else{
-		for (x <- 2 to para){
+		for (x <- para to 2){
 			if (x == 2 | x == 4 | x == 6 | x == 8 | x == 9 | x == 11){
 				days += 31;
 			}else if (x == 3){
@@ -36,11 +36,10 @@ object neighbor{
 	val time_start = java.lang.System.currentTimeMillis();
 	val degree= args(0).toDouble
 	val time_step = args(1).toInt
-	val heuristic = args(2).toInt
-	val neighbor_value = args(3).toInt
-	val input_path = args(4)
-	val result_path = args(5)
-
+	//val heuristic = args(2).toInt
+	val neighbor_value = args(2).toInt
+	val input_path = args(3)
+	val result_path = args(4)
 	val PART = 100
    // System.setProperty("hadoop.home.dir", "HADOOP_HOME");
     
@@ -48,11 +47,13 @@ object neighbor{
     setAppName("neighbor")
 	.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 	.set("spark.kryo.registrationRequired","true")
-	.registerKryoClasses(Array(
+	.registerKryoClasses(
+	Array(
 	classOf[Array[String]],
 	neighbor.getClass,
 	classOf[scala.collection.mutable.WrappedArray$ofRef]
-	))
+	)
+	)
     
     val sc = new SparkContext(conf);
     
@@ -60,7 +61,7 @@ object neighbor{
     
     val data = input.map(line => line.split(",").map(elem => elem.trim))
 
-    val result_filter = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0")
+	val result_filter = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0")
 		.filter(line => line(6) != "0")
 		//.persist(StorageLevel.MEMORY_ONLY)
 
@@ -70,11 +71,11 @@ object neighbor{
 	val result_drop = result_filter
 		.map(line => (line(9),line(10),line(2) ) )
 	
-	val result3 = result_pick.union(result_drop)
-	//val seq_rdd = Seq(result_pick, result_drop)
-	//val result3 = sc.union(seq_rdd)
+	//result_filter.unpersist();
 
-	val real_num = result3.count();
+    val result3 = result_pick.union(result_drop)
+		//.persist()
+    val real_num = result3.count();
 
     val result4 = result3.map( line => (
 		( 
@@ -89,9 +90,9 @@ object neighbor{
 		, 1 ) )
 
 	val result5 = result4.reduceByKey( (x,y) => x + y)
-	.coalesce(PART)
+	//.coalesce(PART)
 	.persist(StorageLevel.MEMORY_ONLY)
-
+ 
 	val rdd_size = result5.count();
     
 	
@@ -118,7 +119,7 @@ object neighbor{
      
     val broad_map = sc.broadcast(result5.collectAsMap());
     
-	val sort_result5= result5.collect.toSeq.sortWith(_._2 > _._2)
+	
 
     val find_weight = (line : ((Int,Int,Int),Int) ) => {
 
@@ -149,11 +150,8 @@ object neighbor{
      
     }
 
-	val g_rdd = sc.parallelize(sort_result5.take(heuristic),
-				PART
-					)
-				.map{ x =>
-     		{
+	val g_rdd = result5.map{ x =>
+     	{
 			
 			val res = find_weight(x)
 			val sum_weight_value = res._1
@@ -167,29 +165,24 @@ object neighbor{
 				
 			
 
-			}
+		}
 
 	}
 
-	
-		
-     // val res = (0.1,0.1,0.1)
-    
-		 // weight_map += ((line._1._1,line._1._2,line._1._3) -> (res._1,res._2,res._3))
-		
-    
+
 
     println("g_rdd")
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
 	
 	sort_g.take(50).foreach(println(_))
-   	println("ver1.0 _ done!!!!!")
+   	
+
     val time_finish = java.lang.System.currentTimeMillis();
     val time = time_finish - time_start;
 
 	val writer = new PrintWriter(new File(result_path + "/result_"+args(0)+
-				"_"+args(1)+"_"+ args(2)+"_"+args(3)+"_neighbor_sampling_v0.3.txt"))
+				"_"+args(1)+"_"+ args(2)+"_origin_neighbor_v0.2.txt"))
 
 
 	sort_g.take(50).foreach{
@@ -200,8 +193,7 @@ object neighbor{
     writer.write(time.toString);
     println(time);
 	writer.close();
-	
-	readChar
+
   }
 }
 
