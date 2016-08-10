@@ -16,7 +16,7 @@ object neighbor{
 	if (para == 1)
 	{ (0) }
 	else{
-		for (x <- para to 2){
+		for (x <- 2 to para){
 			if (x == 2 | x == 4 | x == 6 | x == 8 | x == 9 | x == 11){
 				days += 31;
 			}else if (x == 3){
