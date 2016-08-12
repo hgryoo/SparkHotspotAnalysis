@@ -68,8 +68,8 @@ object neighbor{
 	
 	
 	val result3 = result_filter.flatMap( line => {
-			val ret = Seq( (line(6),line(5),line(1) ), (line(10),line(9),line(2) ) )
-			(ret)
+			Seq( (line(6),line(5),line(1) ), (line(10),line(9),line(2) ) )
+		
 			}
 )
 	//val seq_rdd = Seq(result_pick, result_drop)
@@ -119,44 +119,32 @@ object neighbor{
     
 	val sort_result5= result5.collect.toSeq.sortWith(_._2 > _._2)
 
-    val find_weight = (line : ((Int,Int,Int),Int) ) => {
 
-		var sum_weight_value = 0.0; //weight x value
-		var sum_weight = 0.0;// 
-		var sum_pow_weight = 0.0 ; // 
-		var i = 0
-		var j = 0
-		var k = 0
-		for ( i <- -neighbor_value to neighbor_value){
-			for ( j <- -neighbor_value to neighbor_value ) {
-				for ( k <- -neighbor_value to neighbor_value ) {
-					if (broad_map.value.get(line._1._1 + i, line._1._2 + j, line._1._3 + k) != None){ 
-						var max = abs(i)
-						if ( max < abs(j) ) { max = abs(j) }
-						if ( max < abs(k) ) { max = abs(k) }
-						val weight = 1.0 / pow(2,max);
-						sum_weight_value += 
-							weight * broad_map.value(line._1._1 + i, line._1._2 + j, line._1._3 + k);
-            			sum_weight += weight;
-            			sum_pow_weight += weight * weight;
+	val g_rdd = sc.parallelize(sort_result5.take(heuristic) , PART).map{ x =>
+     		{
+			
+			var sum_weight_value = 0.0; //weight x value
+			var sum_weight = 0.0;// 
+			var sum_pow_weight = 0.0 ; // 
+			var i = 0
+			var j = 0
+			var k = 0
+			for ( i <- -neighbor_value to neighbor_value){
+				for ( j <- -neighbor_value to neighbor_value ) {
+					for ( k <- -neighbor_value to neighbor_value ) {
+						if (broad_map.value.get(x._1._1 + i, x._1._2 + j, x._1._3 + k) != None){ 
+							var max = abs(i)
+							if ( max < abs(j) ) { max = abs(j) }
+							if ( max < abs(k) ) { max = abs(k) }
+							val weight = 1.0 / pow(2,max);
+							sum_weight_value += 
+								weight * broad_map.value(x._1._1 + i, x._1._2 + j, x._1._3 + k);
+            				sum_weight += weight;
+            				sum_pow_weight += weight * weight;
+						}
 					}
 				}
 			}
-		}
-		(sum_weight_value,sum_weight,sum_pow_weight)
-      
-     
-    }
-
-	val g_rdd = sc.parallelize(sort_result5.take(heuristic) , PART
-					)
-				.map{ x =>
-     		{
-			
-			val res = find_weight(x)
-			val sum_weight_value = res._1
-			val sum_weight =   res._2
-			val sum_pow_weight =  res._3
       
 			val denominator = 1000 * sqrt((rdd_size * sum_pow_weight - sum_weight * sum_weight)/(rdd_size - 1));
 			val molecule = sum_weight_value - mean * sum_weight;
