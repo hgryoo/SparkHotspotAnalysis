@@ -96,7 +96,7 @@ object neighbor{
 	val result5 = result4.reduceByKey( (x,y) => x + y)
 	.filter(line => line._1._1 >= (-90 / degree) && line._1._1 <= (90/degree))
 	.filter(line => line._1._2 >= (-180 / degree) && line._1._2 <= (180/degree))
-	.coalesce(PART)
+	//.coalesce(PART)
 	.persist(StorageLevel.MEMORY_ONLY)
 
 	val rdd_size = result5.count();
@@ -148,8 +148,7 @@ object neighbor{
      
     }
 
-	val g_rdd = sc.parallelize(sort_result5.take(heuristic),
-				PART
+	val g_rdd = sc.parallelize(sort_result5.take(heuristic) , PART
 					)
 				.map{ x =>
      		{
@@ -183,12 +182,12 @@ object neighbor{
 	
 	
 	sort_g.take(50).foreach(println(_))
-   	println("ver1.0 _ done!!!!!")
+
     val time_finish = java.lang.System.currentTimeMillis();
     val time = time_finish - time_start;
 
 	val writer = new PrintWriter(new File(result_path + "/result_"+args(0)+
-				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.4.txt"))
+				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.5.txt"))
 
 
 	sort_g.take(50).foreach{

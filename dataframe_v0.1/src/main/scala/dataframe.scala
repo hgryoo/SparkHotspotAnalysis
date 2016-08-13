@@ -50,7 +50,7 @@ object dataframe {
 	.set("spark.kryo.registrationRequired","true")
 	.registerKryoClasses(Array(
 	classOf[Array[String]],
-	neighbor.getClass,
+	dataframe.getClass,
 	classOf[scala.collection.mutable.WrappedArray$ofRef]
 	))
 

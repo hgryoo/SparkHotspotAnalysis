@@ -4,7 +4,7 @@
 		module="dataframe_2.10"
 		revision="1.0"
 		status="integration"
-		publication="20160813120339"
+		publication="20160813134330"
 	>
 		<description>
 		dataframe
@@ -35,5 +35,7 @@
 		<dependency org="org.scala-lang" name="scala-compiler" rev="2.10.4" conf="scala-tool->default,optional(default)"/>
 		<dependency org="org.scala-lang" name="scala-library" rev="2.10.4" conf="scala-tool->default,optional(default);compile->default(compile)"/>
 		<dependency org="org.apache.spark" name="spark-core_2.10" rev="1.6.0" conf="provided->default(compile)"/>
+		<dependency org="org.apache.spark" name="spark-sql_2.10" rev="1.6.0" conf="compile->default(compile)"/>
+		<dependency org="com.databricks" name="spark-csv_2.11" rev="1.4.0" conf="compile->default(compile)"/>
 	</dependencies>
 </ivy-module>
