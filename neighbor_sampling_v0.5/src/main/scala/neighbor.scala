@@ -75,11 +75,11 @@ object neighbor{
 	//val seq_rdd = Seq(result_pick, result_drop)
 	//val result3 = sc.union(seq_rdd)
 
-	val real_num = result3.count();
 	
-	//var real_num = sc.accumulator[Long](0);
+	
+	var real_num = sc.accumulator[Long](0);
     val result4 = result3.map( line => {
-		//real_num += 1;
+		real_num += 1;
 		(
 			( 
 				(line._1.toDouble/degree).toInt ,
@@ -105,14 +105,14 @@ object neighbor{
 	if (heuristic < 10000) {
 		heuristic = 10000;
 	}
-	val mean = (real_num-1).toDouble /rdd_size.toDouble; // 
+	val mean = (real_num.value -1).toDouble /rdd_size.toDouble; // 
   
     //val S =  scala.math.sqrt(abs(pow_sum_mean - mean * mean));
     
 	//println("S : " + S);
 	println("mean : " + mean);
 	println("rdd_size : " + rdd_size);
-    println("real num :" + real_num );
+    println("real num :" + real_num.value );
 
      
     val broad_map = sc.broadcast(result5.collectAsMap());
