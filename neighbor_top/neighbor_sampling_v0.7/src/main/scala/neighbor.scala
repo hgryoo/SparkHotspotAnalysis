@@ -48,11 +48,12 @@ object neighbor{
     val conf = new SparkConf().
     setAppName("neighbor")
 	.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-	.set("spark.kryo.registrationRequired","true")
+	//.set("spark.kryo.registrationRequired","true")
 	.registerKryoClasses(Array(
 	classOf[Array[String]],
 	neighbor.getClass,
-	classOf[scala.collection.mutable.WrappedArray$ofRef]
+	classOf[scala.collection.mutable.WrappedArray$ofRef],
+	classOf[Array[Double]]
 	))
 
     val sc = new SparkContext(conf);
