@@ -54,7 +54,7 @@ object neighbor{
 	neighbor.getClass,
 	classOf[scala.collection.mutable.WrappedArray$ofRef]
 	))
-    
+
     val sc = new SparkContext(conf);
     
     val input = sc.textFile(input_path)
@@ -68,8 +68,8 @@ object neighbor{
 	
 	
 	val result3 = result_filter.flatMap( line => {
-			Seq( (line(6),line(5),line(1) ), (line(10),line(9),line(2) ) )
-		
+			Array( (line(6),line(5),line(1) ), (line(10),line(9),line(2) ) )
+			
 			}
 )
 	//val seq_rdd = Seq(result_pick, result_drop)
@@ -92,7 +92,7 @@ object neighbor{
 			) , 1 
 		)
 		} )
-
+	
 	val result5 = result4.reduceByKey( (x,y) => x + y)
 	.filter(line => line._1._1 >= (-90 / degree) && line._1._1 <= (90/degree))
 	.filter(line => line._1._2 >= (-180 / degree) && line._1._2 <= (180/degree))
@@ -119,7 +119,6 @@ object neighbor{
     
 	val sort_result5= result5.collect.toSeq.sortWith(_._2 > _._2)
 
-
 	val g_rdd = sc.parallelize(sort_result5.take(heuristic) , PART).map{ x =>
      		{
 			
@@ -141,10 +140,10 @@ object neighbor{
 								weight * broad_map.value(x._1._1 + i, x._1._2 + j, x._1._3 + k);
             				sum_weight += weight;
             				sum_pow_weight += weight * weight;
-						}
 					}
 				}
 			}
+		}
       
 			val denominator = 1000 * sqrt((rdd_size * sum_pow_weight - sum_weight * sum_weight)/(rdd_size - 1));
 			val molecule = sum_weight_value - mean * sum_weight;
