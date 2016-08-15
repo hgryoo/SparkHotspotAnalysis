@@ -41,6 +41,7 @@ object neighbor{
 	val neighbor_value = args(2).toInt
 	val input_path = args(3)
 	val result_path = args(4)
+	val heuristic_percent = args(5).toDouble
 
 	val PART = 100
    // System.setProperty("hadoop.home.dir", "HADOOP_HOME");
@@ -48,12 +49,11 @@ object neighbor{
     val conf = new SparkConf().
     setAppName("neighbor")
 	.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-	//.set("spark.kryo.registrationRequired","true")
+	.set("spark.kryo.registrationRequired","true")
 	.registerKryoClasses(Array(
 	classOf[Array[String]],
 	neighbor.getClass,
-	classOf[scala.collection.mutable.WrappedArray$ofRef],
-	classOf[Array[Double]]
+	classOf[scala.collection.mutable.WrappedArray$ofRef]
 	))
 
     val sc = new SparkContext(conf);
@@ -102,7 +102,7 @@ object neighbor{
 
 	val rdd_size = result5.count();
     
-	var heuristic = (rdd_size / 10).toInt
+	var heuristic = (rdd_size * heuristic_percent).toInt
 	if (heuristic < 10000) {
 		heuristic = 10000;
 	}
@@ -149,7 +149,7 @@ object neighbor{
 			val denominator = 1000 * sqrt((rdd_size * sum_pow_weight - sum_weight * sum_weight)/(rdd_size - 1));
 			val molecule = sum_weight_value - mean * sum_weight;
 			val g_value = molecule / denominator;
-      		(g_value ,(x._1._1,x._1._2,x._1._3))
+      		((x._1._1,x._1._2,x._1._3), g_value)
 				
 			
 
@@ -166,26 +166,24 @@ object neighbor{
     
 
     println("g_rdd")
-	val sort_g = g_rdd.top(50)
+	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
 	
-	sort_g.foreach(line => println((line._2._1) + ", " + (line._2._2) + ", " +
-			(line._2._3) + " : " + (line._1)))
+	sort_g.take(50).foreach(println(_))
 
     val time_finish = java.lang.System.currentTimeMillis();
     val time = time_finish - time_start;
 
 	val writer = new PrintWriter(new File(result_path + "/result_"+args(0)+
-				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.7.txt"))
+				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.6.txt"))
 
 
-	sort_g.foreach{
-			line => writer.write((line._2._1) + ", " + (line._2._2) + ", " +
-			(line._2._3) + " : " + (line._1))
+	sort_g.take(50).foreach{
+			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +
+			(line._1._3) + " : " + (line._2))
 			writer.write("\n")
 	}
     writer.write(time.toString);
-	writer.write("\nnum:"+real_num.value);
     println(time);
 	writer.close();
 	
