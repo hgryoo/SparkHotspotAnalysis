@@ -47,7 +47,13 @@ object neighbor{
     
     val conf = new SparkConf().
     setAppName("neighbor")
-
+	.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+	.set("spark.kryo.registrationRequired","true")
+	.registerKryoClasses(Array(
+	classOf[Array[String]],
+	neighbor.getClass,
+	classOf[scala.collection.mutable.WrappedArray$ofRef]
+	))
 
     val sc = new SparkContext(conf);
     
@@ -142,7 +148,7 @@ object neighbor{
 			val denominator = 1000 * sqrt((rdd_size * sum_pow_weight - sum_weight * sum_weight)/(rdd_size - 1));
 			val molecule = sum_weight_value - mean * sum_weight;
 			val g_value = molecule / denominator;
-      		((x._1._1,x._1._2,x._1._3), g_value)
+      		(g_value ,(x._1._1,x._1._2,x._1._3))
 				
 			
 
@@ -159,24 +165,26 @@ object neighbor{
     
 
     println("g_rdd")
-	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
+	val sort_g = g_rdd.top(50)
 	
 	
-	sort_g.take(50).foreach(println(_))
+	sort_g.foreach(line => println((line._2._1) + ", " + (line._2._2) + ", " +
+			(line._2._3) + " : " + (line._1)))
 
     val time_finish = java.lang.System.currentTimeMillis();
     val time = time_finish - time_start;
 
 	val writer = new PrintWriter(new File(result_path + "/result_"+args(0)+
-				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.6.txt"))
+				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.7.txt"))
 
 
-	sort_g.take(50).foreach{
-			line => writer.write((line._1._1) + ", " + (line._1._2) + ", " +
-			(line._1._3) + " : " + (line._2))
+	sort_g.foreach{
+			line => writer.write((line._2._1) + ", " + (line._2._2) + ", " +
+			(line._2._3) + " : " + (line._1))
 			writer.write("\n")
 	}
     writer.write(time.toString);
+	writer.write("\nnum:"+real_num.value);
     println(time);
 	writer.close();
 	
