@@ -12,23 +12,23 @@ import java.lang.System._
 object neighbor{
   def find_days(para : Int) : Int = {
 	var x = 0
-	var days = 0
+	var total_days = 0
 	if (para == 1)
 	{ (0) }
 	else{
 		for (x <- 2 to para){
 			if (x == 2 | x == 4 | x == 6 | x == 8 | x == 9 | x == 11){
-				days += 31;
+				total_days += 31;
 			}else if (x == 3){
-				days += 28;
+				total_days += 28;
 			}
 			else{
-				days += 30;
+				total_days += 30;
 			}
 		}
 	
 	}
-	(days)
+	(total_days)
   }
 
   def main(args: Array[String]): Unit = {
@@ -41,13 +41,13 @@ object neighbor{
 	val neighbor_value = args(2).toInt
 	val input_path = args(3)
 	val result_path = args(4)
-	val heuristic_percent = args(5).toDouble
+	val top_percent = args(5).toDouble
 
 	val PART = 100
    // System.setProperty("hadoop.home.dir", "HADOOP_HOME");
     
-    val conf = new SparkConf().
-    setAppName("neighbor")
+	val conf = new SparkConf().
+	setAppName("neighbor")
 	.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 	.set("spark.kryo.registrationRequired","true")
 	.registerKryoClasses(Array(
@@ -56,13 +56,13 @@ object neighbor{
 	classOf[scala.collection.mutable.WrappedArray$ofRef]
 	))
 
-    val sc = new SparkContext(conf);
+	val sc = new SparkContext(conf);
     
-    val input = sc.textFile(input_path)
+	val input = sc.textFile(input_path)
     
-    val data = input.map(line => line.split(",").map(elem => elem.trim))
+	val data = input.map(line => line.split(",").map(elem => elem.trim))
 
-    val result_filter = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0")
+	val result_filter = data.filter(line => line(0) != "VendorID").filter(line => line(5) != "0")
 		.filter(line => line(6) != "0").filter(line => line(9) != "0").filter(line => line(10) != "0")
 		//.persist(StorageLevel.MEMORY_ONLY)
 
@@ -78,16 +78,16 @@ object neighbor{
 
 	
 	
-	var real_num = sc.accumulator[Long](0);
-    val result4 = result3.map( line => {
-		real_num += 1;
+	var data_num = sc.accumulator[Long](0);
+	val result4 = result3.map( line => {
+		data_num += 1;
 		(
 			( 
 				(line._1.toDouble/degree).toInt ,
-        		(line._2.toDouble/degree).toInt,
-       			( 
-					find_days(line._3.split(' ')(0).split('-')(1).toInt) 
-					+ line._3.split(' ')(0).split('-')(2).toInt -1 
+        			(line._2.toDouble/degree).toInt,
+       				( 
+				find_days(line._3.split(' ')(0).split('-')(1).toInt) 
+				+ line._3.split(' ')(0).split('-')(2).toInt -1 
 				) 
 				/ time_step
 			) , 1 
@@ -100,28 +100,28 @@ object neighbor{
 	//.coalesce(PART)
 	.persist(StorageLevel.MEMORY_ONLY)
 
-	val rdd_size = result5.count();
+	val cube_size = result5.count();
     
-	var heuristic = (rdd_size * heuristic_percent).toInt
-	if (heuristic < 10000) {
-		heuristic = 10000;
+	var top_amount = (cube_size * top_percent).toInt
+	if (top_amount < 10000) {
+		top_amount = 10000;
 	}
-	val mean = (real_num.value -1).toDouble /rdd_size.toDouble; // 
+	val mean = (data_num.value -1).toDouble /cube_size.toDouble; // 
   
     //val S =  scala.math.sqrt(abs(pow_sum_mean - mean * mean));
     
 	//println("S : " + S);
 	println("mean : " + mean);
-	println("rdd_size : " + rdd_size);
-    println("real num :" + real_num.value );
+	println("rdd_size : " + cube_size);
+	println("real num :" + data_num.value );
 
      
-    val broad_map = sc.broadcast(result5.collectAsMap());
+	val broad_map = sc.broadcast(result5.collectAsMap());
     
 	val sort_result5= result5.collect.toSeq.sortWith(_._2 > _._2)
 
-	val g_rdd = sc.parallelize(sort_result5.take(heuristic) , PART).map{ x =>
-     		{
+	val g_rdd = sc.parallelize(sort_result5.take(top_amount) , PART).map{ x =>
+		{
 			
 			var sum_weight_value = 0.0; //weight x value
 			var sum_weight = 0.0;// 
@@ -137,23 +137,22 @@ object neighbor{
 							if ( max < abs(j) ) { max = abs(j) }
 							if ( max < abs(k) ) { max = abs(k) }
 							val weight = 1.0 / pow(2,max);
-							sum_weight_value += 
-								weight * broad_map.value(x._1._1 + i, x._1._2 + j, x._1._3 + k);
-            				sum_weight += weight;
-            				sum_pow_weight += weight * weight;
+							sum_weight_value += weight * broad_map.value(x._1._1 + i, x._1._2 + j, x._1._3 + k);
+							sum_weight += weight;
+							sum_pow_weight += weight * weight;
+						}
 					}
 				}
 			}
-		}
       
-			val denominator = 1000 * sqrt((rdd_size * sum_pow_weight - sum_weight * sum_weight)/(rdd_size - 1));
+			val denominator = 1000 * sqrt((cube_size * sum_pow_weight - sum_weight * sum_weight)/(cube_size - 1));
 			val molecule = sum_weight_value - mean * sum_weight;
 			val g_value = molecule / denominator;
       		((x._1._1,x._1._2,x._1._3), g_value)
 				
 			
 
-			}
+		}
 
 	}
 
@@ -165,17 +164,17 @@ object neighbor{
 		
     
 
-    println("g_rdd")
+	println("g_rdd")
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
 	
 	
 	sort_g.take(50).foreach(println(_))
 
-    val time_finish = java.lang.System.currentTimeMillis();
-    val time = time_finish - time_start;
+	val time_finish = java.lang.System.currentTimeMillis();
+	val time = time_finish - time_start;
 
 	val writer = new PrintWriter(new File(result_path + "/result_"+args(0)+
-				"_"+args(1)+"_"+ args(2)+"_neighbor_sampling_v0.6.txt"))
+				"_"+args(1)+"_"+ args(2)+args(5)+"_neighbor_sampling_v0.7.txt"))
 
 
 	sort_g.take(50).foreach{
@@ -183,8 +182,9 @@ object neighbor{
 			(line._1._3) + " : " + (line._2))
 			writer.write("\n")
 	}
-    writer.write(time.toString);
-    println(time);
+	writer.write(time.toString);
+	writer.write("\n data num : "+data_num.value);
+	println(time);
 	writer.close();
 	
 	readChar
