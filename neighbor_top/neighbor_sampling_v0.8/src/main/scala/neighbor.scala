@@ -52,7 +52,11 @@ object neighbor{
 	.set("spark.kryo.registrationRequired","true")
 	.registerKryoClasses(Array(
 	classOf[Array[String]],
+	classOf[Array[Int]],
 	neighbor.getClass,
+	classOf[java.lang.Class[_]],
+	classOf[scala.reflect.ClassTag$$anon$1],
+	
 	classOf[scala.collection.mutable.WrappedArray$ofRef]
 	))
 
@@ -115,14 +119,12 @@ object neighbor{
 	println("rdd_size : " + cube_size);
 	println("real num :" + data_num.value );
 
-	val result5_map = result5.collectAsMap()
-     
-	val broad_map = sc.broadcast(result5_map);
+	val broad_map = sc.broadcast(result5.collectAsMap());
     
-	val sort_result5= result5_map.toSeq.sortWith(_._2 > _._2)
+	val sort_result5= result5.sortBy(_._2,false)
 
 	val g_rdd = sc.parallelize(sort_result5.take(top_amount) , PART).map{ x =>
-		{
+			{
 			
 			var sum_weight_value = 0.0; //weight x value
 			var sum_weight = 0.0;// 
@@ -138,7 +140,7 @@ object neighbor{
 							if ( max < abs(j) ) { max = abs(j) }
 							if ( max < abs(k) ) { max = abs(k) }
 							val weight = 1.0 / pow(2,max);
-							sum_weight_value += weight * broad_map.value(x._1._1 + i, x._1._2 + j, x._1._3 + k);
+							sum_weight_value += weight * (broad_map.value(x._1._1 + i, x._1._2 + j, x._1._3 + k));
 							sum_weight += weight;
 							sum_pow_weight += weight * weight;
 						}
@@ -175,7 +177,7 @@ object neighbor{
 	val time = time_finish - time_start;
 
 	val writer = new PrintWriter(new File(result_path + "/result_"+args(0)+
-				"_"+args(1)+"_"+ args(2)+args(5)+"_neighbor_sampling_v0.7.txt"))
+				"_"+args(1)+"_"+ args(2)+"_"+args(5)+"_neighbor_sampling_v0.8.txt"))
 
 
 	sort_g.take(50).foreach{
