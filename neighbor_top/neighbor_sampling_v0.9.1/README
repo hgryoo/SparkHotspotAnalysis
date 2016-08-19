@@ -1,0 +1,5 @@
+v0.9.1
+
+### parallelize(take top amount) => zipwithindex->filter(<topamount)
+### 0.7.1보다 느림.
+### value가 0인곳도 weight sum에 넣음
