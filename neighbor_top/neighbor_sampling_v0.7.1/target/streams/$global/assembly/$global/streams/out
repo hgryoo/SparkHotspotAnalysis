@@ -1,7 +1,7 @@
 [0m[[0mdebug[0m] [0mCalculate mappings...[0m
 [0m[[0minfo[0m] [0mChecking every *.class/*.jar file's SHA-1.[0m
 [0m[[0minfo[0m] [0mMerging files...[0m
-[0m[[0minfo[0m] [0mSHA-1: fdb531e1e5c6d2743eb3a433cd2ed34e28cc80f5[0m
+[0m[[0minfo[0m] [0mSHA-1: 22f19567986b05c4c906ae60a3d7b04e02b27754[0m
 [0m[[0minfo[0m] [0mPackaging /home/cocoss/neighbor_sampling_v0.7.1/target/scala-2.10/neighbor.jar ...[0m
 [0m[[0mdebug[0m] [0mInput file mappings:[0m
 [0m[[0mdebug[0m] [0m	neighbor$$anonfun$1.class[0m

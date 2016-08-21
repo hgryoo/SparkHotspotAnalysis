@@ -133,7 +133,7 @@ object neighbor{
 			for ( i <- -neighbor_value to neighbor_value){
 				for ( j <- -neighbor_value to neighbor_value ) {
 					for ( k <- -neighbor_value to neighbor_value ) {
-						if (x._1._3 + k > -1 || x._1._3 + k < (210 / time_step) +1 ){
+						if (x._1._3 + k > -1 && x._1._3 + k < (210 / time_step) +1 ){
 							var max = abs(i)
 							if ( max < abs(j) ) { max = abs(j) }
 							if ( max < abs(k) ) { max = abs(k) }
