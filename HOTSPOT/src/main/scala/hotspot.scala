@@ -38,8 +38,8 @@ object hotspot{
 	val time_step = args(1).toInt
 	val input_path = args(2)
 	val result_path = args(3)
-	val top_percent = 0.10
 
+	val top_percent = 0.10 //pick top rate of all cube
 	val conf = new SparkConf().
 	setAppName("hotspot")
 	.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -81,43 +81,45 @@ object hotspot{
 		} )
 	
 	val result5 = result4.reduceByKey( (x,y) => x + y)
-	.filter(line => line._1._1 >= (-90 / degree) && line._1._1 <= (90/degree))
-	.filter(line => line._1._2 >= (-180 / degree) && line._1._2 <= (180/degree))
+	.filter(line => line._1._1 >= (-90 / degree) && line._1._1 <= (90/degree)) //not in earth
+	.filter(line => line._1._2 >= (-180 / degree) && line._1._2 <= (180/degree)) //not in earth
 	.persist(StorageLevel.MEMORY_ONLY)
 
 	var data_num = sc.accumulator[Long](0);
 	var pow_sum = sc.accumulator[Long](0);
 	var ac_cube_size = sc.accumulator[Long](0);
+
 	result5.foreach( line => {
 		ac_cube_size += 1;
 		data_num += line._2
 		pow_sum += line._2 * line._2;
 	})
 
-	val cube_size = ac_cube_size.value;
-	val pow_sum_mean = pow_sum.value.toDouble / cube_size.toDouble
+	val cube_size = ac_cube_size.value; //cube_num
+	
+	val pow_sum_mean = pow_sum.value.toDouble / cube_size.toDouble // mean of power of value
     
-	var top_amount = (cube_size * top_percent).toInt
+	var top_amount = (cube_size * top_percent).toInt // we will pick top amount
 	if (top_amount < 50000) {
 		top_amount = 50000;
 	}
-	val mean = data_num.value.toDouble /cube_size.toDouble; // 
+	val mean = data_num.value.toDouble /cube_size.toDouble; 
   
-	val S =  scala.math.sqrt(pow_sum_mean - mean * mean);
+	val S =  scala.math.sqrt(pow_sum_mean - mean * mean); //calculate S
 
-	val result5_map = result5.collectAsMap()
+	val result5_map = result5.collectAsMap() 
      
-	val broad_map = sc.broadcast(result5_map);
+	val broad_map = sc.broadcast(result5_map); //broadcast all of cube
     
-	val sort_result5= result5_map.toSeq.sortWith(_._2 > _._2)
+	val sort_result5= result5_map.toSeq.sortWith(_._2 > _._2) //sort by value cube
 
-	val neighbor_value = 1
+	val neighbor_value = 1 
 
 	val g_rdd = sc.parallelize(sort_result5.take(top_amount) , (top_amount * 0.002).toInt).map{ x =>
 		{
 			
 			var sum_value = 0.0;
-			val sum_neighbor = 27;
+			val sum_neighbor = 27; 
 			var i = 0
 			var j = 0
 			var k = 0
@@ -145,10 +147,10 @@ object hotspot{
 	}
 
 	
-	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2)
+	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2) //sort by g_value
 	
 
-	val writer = new PrintWriter(new File(result_path + "/result_hotspot.csv"))
+	val writer = new PrintWriter(new File(result_path + "/result_hotspot.csv")) //make csv file
 	writer.write("cell_x, cell_y, time_step, zscore, pvalue \n");
 	var p_value = 1.0;
 
