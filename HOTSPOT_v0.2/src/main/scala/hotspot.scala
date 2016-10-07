@@ -97,7 +97,7 @@ object hotspot{
 				+ line._3.split(' ')(0).split('-')(2).toInt -1 
 				)
 				/ time_step
-			) , 1 
+			) , 1.toLong 
 		)
 		} )
 	
@@ -140,11 +140,18 @@ object hotspot{
 	if (top_amount < 50000) {
 		top_amount = 50000;
 	}
+	if (top_amount > cube_size){
+		top_amount = cube_size.toInt;	
+	}
+	
 	val neighbor_value = 1
-	val g_rdd = sc.parallelize(sort_result5.take(top_amount) , (top_amount * 0.002).toInt).map{ x =>
+	var parallelize_num = (top_amount * 0.002).toInt;
+	if ( parallelize_num < 10 ) parallelize_num = 10;
+
+	val g_rdd = sc.parallelize(sort_result5.take(top_amount) , parallelize_num).map{ x =>
 		{
 			
-			var sum_value = 0.0;
+			var sum_value = 0.toLong;
 			val sum_neighbor = 27; 
 			var i = 0
 			var j = 0
@@ -173,10 +180,13 @@ object hotspot{
 	}
 //----------------------------------------------------------------------------------------------------//
 
-
+	
+	
 // pick hotspot and make output file
 //----------------------------------------------------------------------------------------------------//
+
 	val sort_g = g_rdd.collect.toSeq.sortWith(_._2 > _._2) 
+
 
 	val writer = new PrintWriter(new File(result_path + "/result_hotspot.csv"))
 	writer.write(hotspot_num + "," + degree + "," + time_step + "\n");
